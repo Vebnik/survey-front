@@ -15,7 +15,15 @@ import DefaultLayout from "@/layouts/default";
 
 export default function IndexPage() {
   const navigate = useNavigate();
-  const [success, setSuccess] = useState<boolean>(false);
+
+  const [success, setSuccess] = useState<boolean>(
+    localStorage.getItem("isAgreement") === "true",
+  );
+
+  const onAgreement = (isSelected: boolean) => {
+    localStorage.setItem("isAgreement", `${isSelected}`);
+    setSuccess(isSelected);
+  };
 
   return (
     <DefaultLayout>
@@ -64,7 +72,7 @@ export default function IndexPage() {
               className="bg-bismark-300 p-1 rounded-md"
               color="success"
               isSelected={success}
-              onChange={() => setSuccess(!success)}
+              onValueChange={onAgreement}
             >
               <span className=" font-semibold text-[14px]">
                 Вы поняли условия анкетирования и согласны пройти опрос?

@@ -1,5 +1,10 @@
 import { Question } from "..";
 
+export const titleQuestion = {
+  title: "Анонимная анкета",
+  text: "",
+};
+
 const question: Question = {
   text: "Способность передвигаться за пределами дома",
   before: [
