@@ -1,9 +1,3 @@
-# Vite & NextUI Template
-
-This is a template for creating applications using Vite and NextUI (v2).
-
-[Try it on CodeSandbox](https://githubbox.com/nextui-org/vite-template)
-
 ## Technologies Used
 
 - [Vite](https://vitejs.dev/guide/)
@@ -34,16 +28,6 @@ npm install
 ```bash
 npm run dev
 ```
-
-### Setup pnpm (optional)
-
-If you are using `pnpm`, you need to add the following code to your `.npmrc` file:
-
-```bash
-public-hoist-pattern[]=*@nextui-org/*
-```
-
-After modifying the `.npmrc` file, you need to run `pnpm install` again to ensure that the dependencies are installed correctly.
 
 ## License
 
