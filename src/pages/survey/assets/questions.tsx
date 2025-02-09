@@ -5,7 +5,8 @@ export const titleQuestion = {
   text: "",
 };
 
-const question: Question = {
+export const questionsData: Question[] = new Array(10).fill(0).map((_, i) => ({
+  id: i,
   text: "Способность передвигаться за пределами дома",
   before: [
     {
@@ -41,6 +42,4 @@ const question: Question = {
       text: "Плохо",
     },
   ],
-};
-
-export const questionsData = new Array(10).fill(question);
+}));

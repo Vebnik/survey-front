@@ -1,11 +1,15 @@
-import { ChangeEventHandler, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Card,
   CardBody,
   CardFooter,
   CardHeader,
+  Divider,
   Input,
+  Radio,
+  RadioGroup,
+  Spinner,
 } from "@nextui-org/react";
 import { useNavigate } from "react-router-dom";
 
@@ -20,9 +24,16 @@ export interface Variant {
 }
 
 export interface Question {
+  id: number;
   text: string;
   before: Variant[];
   after: Variant[];
+}
+
+export interface Answer {
+  questionId: number;
+  after: null | string;
+  before: null | string;
 }
 
 function TitleQuestion({
@@ -117,6 +128,72 @@ function TitleQuestion({
   );
 }
 
+function QuestionForm({
+  question,
+  onAnswer,
+}: {
+  question: Question;
+  onAnswer: (answer: Answer) => void;
+}) {
+  const [answer, setAnswer] = useState<Answer>({
+    questionId: question.id,
+    after: null,
+    before: null,
+  });
+
+  const onSelect = (text: string, answerType: "before" | "after") => {
+    answer[answerType] = text;
+
+    const answers: Answer[] = JSON.parse(
+      localStorage.getItem("answers") || "[]"
+    );
+
+    const index = answers.findIndex(
+      (el) => el.questionId === answer.questionId
+    );
+
+    if (index === -1) {
+      answers.push(answer);
+    } else {
+      answers[index] = answer;
+    }
+
+    localStorage.setItem("answers", JSON.stringify(answers));
+
+    setAnswer(answer);
+    onAnswer(answer);
+  };
+
+  return (
+    <Card className="bg-transparent shadow-none">
+      <CardHeader className="font-semibold">{question.text}</CardHeader>
+      <CardBody className="flex flex-row justify-around">
+        <RadioGroup
+          label="До"
+          onChange={(ev) => onSelect(ev.target.value, "before")}
+        >
+          {question.after.map((el) => (
+            <Radio key={Math.random()} value={el.text}>
+              {el.text}
+            </Radio>
+          ))}
+        </RadioGroup>
+        <Divider orientation="vertical" />
+        <RadioGroup
+          label="После"
+          onChange={(ev) => onSelect(ev.target.value, "after")}
+        >
+          {question.before.map((el) => (
+            <Radio key={Math.random()} value={el.text}>
+              {el.text}
+            </Radio>
+          ))}
+        </RadioGroup>
+      </CardBody>
+    </Card>
+  );
+}
+
 function NextQuestion({
   page,
   setPage,
@@ -126,14 +203,24 @@ function NextQuestion({
   setPage: SatateType;
   question: Question;
 }) {
+  const [isValid, setIsValid] = useState<boolean>(false);
+
+  const onAnswer = (answer: Answer) => {
+    // eslint-disable-next-line no-console
+    console.log(answer);
+    setIsValid(!!answer.after && !!answer.before);
+  };
+
   return (
     <Card className="rounded-md bg-bismark-100 fade-in w-[100%] min-h-[100%] max-w-[800px]">
-      <CardHeader>Вопрос: {page}</CardHeader>
-      <CardHeader className="font-bold">{question.text}</CardHeader>
-      <CardBody>{question.text}</CardBody>
+      <CardHeader className="font-bold">Вопрос: {page}</CardHeader>
+      <CardBody>
+        <QuestionForm question={question} onAnswer={onAnswer} />
+      </CardBody>
       <CardFooter className="flex flex-row justify-between">
         <Button
           className="bg-bismark-300"
+          isDisabled={!isValid}
           variant="flat"
           onPress={() => setPage(page + 1)}
         >
@@ -153,31 +240,69 @@ function NextQuestion({
 
 export default function SurveyPage() {
   const [page, setPage] = useState<number>(
-    Number(localStorage.getItem("page") || 1),
+    Number(+(localStorage.getItem("page") || 1))
   );
   const [questions] = useState<Question[]>(questionsData);
   const [question, setQuestion] = useState<Question>();
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     setQuestion(questions[page - 1]);
     localStorage.setItem("page", `${page}`);
   }, [page]);
 
-  return (
-    <DefaultLayout>
-      <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 h-[100%]">
-        {!(page > 1) ? (
+  const onSend = () => {
+    const answers = JSON.parse(localStorage.getItem("answers") || "[]");
+
+    // eslint-disable-next-line no-console
+    console.log(answers);
+
+    localStorage.removeItem("isAgreement");
+    localStorage.removeItem("page");
+    localStorage.removeItem("answers");
+
+    navigate("/");
+  };
+
+  if (page === 1)
+    return (
+      <DefaultLayout>
+        <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 h-[100%]">
           <TitleQuestion page={page} setPage={setPage} />
-        ) : question ? (
+        </section>
+      </DefaultLayout>
+    );
+
+  if (page > 1 && question && page !== questions.length)
+    return (
+      <DefaultLayout>
+        <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 h-[100%]">
           <NextQuestion
             key={page}
             page={page}
             question={question!}
             setPage={setPage}
           />
-        ) : (
-          <></>
-        )}
+        </section>
+      </DefaultLayout>
+    );
+
+  if (page === questions.length)
+    return (
+      <DefaultLayout>
+        <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 h-[100%]">
+          <Button className="bg-bismark-300" variant="flat" onPress={onSend}>
+            Отправить
+          </Button>
+        </section>
+      </DefaultLayout>
+    );
+
+  return (
+    <DefaultLayout>
+      <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 h-[100%]">
+        <Spinner />
       </section>
     </DefaultLayout>
   );
