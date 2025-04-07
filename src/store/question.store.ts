@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import ky from "ky";
 
 export interface Answers {
   before_surgery: string[];
@@ -36,9 +37,11 @@ type Store = {
   updateCompleted: (
     index: number,
     answerType: "before_surgery" | "after_six_months",
-    text: string,
+    // eslint-disable-next-line prettier/prettier
+    text: string
   ) => void;
   setPage: (page: number) => void;
+  setDate: (date: string) => void;
   setSatisfied: (satisfied: "Да" | "Частично" | "Нет") => void;
   clear: () => void;
 };
@@ -183,6 +186,13 @@ export const useQuestion = create<Store>()((set, get) => ({
     // eslint-disable-next-line no-console
     console.log({ data });
 
+    const response = await ky.post("http://localhost:4042/answer/submit", {
+      json: data,
+    });
+
+    // eslint-disable-next-line no-console
+    console.log({ response });
+
     return set({ loading: false });
   },
   updateCompleted: (index, answerType, text) => {
@@ -198,6 +208,7 @@ export const useQuestion = create<Store>()((set, get) => ({
     return set({ completed });
   },
   setPage: (page) => set({ page }),
+  setDate: (date: string) => set({ date }),
   setSatisfied: (satisfied) => set({ satisfied }),
   clear: () => {
     set({

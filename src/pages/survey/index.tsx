@@ -95,7 +95,10 @@ function TitleQuestion() {
         <Button
           className="bg-bismark-300"
           isDisabled={!Boolean(value) || isInvalid}
-          onPress={() => que.setPage(que.page + 1)}
+          onPress={() => {
+            que.setDate(value);
+            que.setPage(que.page + 1);
+          }}
         >
           Далее
         </Button>
@@ -162,7 +165,7 @@ function SubmitForm() {
       <CardBody className="flex flex-row justify-center">
         <Button
           className="bg-bismark-300 max-w-max"
-          isLoading={que.loading}
+          // isLoading={que.loading}
           onPress={onSubmit}
         >
           Отправить
