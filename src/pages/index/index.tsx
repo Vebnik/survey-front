@@ -8,23 +8,15 @@ import {
   Spacer,
   Switch,
 } from "@nextui-org/react";
-import { useState } from "react";
 import { InfoIcon } from "@nextui-org/shared-icons";
 import { useNavigate } from "react-router-dom";
 
 import DefaultLayout from "@/layouts/default";
+import { useQuestion } from "@/store/question.store";
 
 export default function IndexPage() {
   const navigate = useNavigate();
-
-  const [success, setSuccess] = useState<boolean>(
-    localStorage.getItem("isAgreement") === "true",
-  );
-
-  const onAgreement = (isSelected: boolean) => {
-    localStorage.setItem("isAgreement", `${isSelected}`);
-    setSuccess(isSelected);
-  };
+  const que = useQuestion();
 
   return (
     <DefaultLayout>
@@ -88,8 +80,8 @@ export default function IndexPage() {
             <Switch
               className="bg-bismark-300 p-1 rounded-md"
               color="success"
-              isSelected={success}
-              onValueChange={onAgreement}
+              isSelected={que.success}
+              onValueChange={() => que.setSuccess(!que.success)}
             >
               <span className=" font-semibold text-[14px]">
                 Вы поняли условия анкетирования и согласны пройти опрос?
@@ -97,7 +89,7 @@ export default function IndexPage() {
             </Switch>
             <Button
               className="bg-bismark-300"
-              isDisabled={!success}
+              isDisabled={!que.success}
               onPress={() => navigate("/survey")}
             >
               Далее

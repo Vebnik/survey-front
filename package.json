@@ -10,6 +10,9 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
+		"@heroui/system": "^2.4.13",
+		"@heroui/theme": "^2.4.13",
+		"@heroui/toast": "^2.0.7",
 		"@nextui-org/button": "2.2.8",
 		"@nextui-org/code": "2.2.5",
 		"@nextui-org/dropdown": "2.3.3",

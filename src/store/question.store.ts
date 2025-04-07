@@ -25,6 +25,7 @@ export interface CompletedQuestion {
 
 type Store = {
   loading: boolean;
+  success: boolean;
   date: string | null;
   pages: number;
   satisfied: "Да" | "Частично" | "Нет" | null;
@@ -42,6 +43,7 @@ type Store = {
   ) => void;
   setPage: (page: number) => void;
   setDate: (date: string) => void;
+  setSuccess: (success: boolean) => void;
   setSatisfied: (satisfied: "Да" | "Частично" | "Нет") => void;
   clear: () => void;
 };
@@ -157,6 +159,7 @@ export const questionsData: Question[] = [
 
 export const useQuestion = create<Store>()((set, get) => ({
   loading: false,
+  success: false,
   date: null,
   pages: 6,
   satisfied: null,
@@ -183,17 +186,20 @@ export const useQuestion = create<Store>()((set, get) => ({
       questions: state.completed,
     };
 
+    const api = import.meta.env.VITE_API_URL || "http://localhost:4042";
+
     // eslint-disable-next-line no-console
     console.log({ data });
 
-    const response = await ky.post("http://localhost:4042/answer/submit", {
-      json: data,
-    });
-
-    // eslint-disable-next-line no-console
-    console.log({ response });
-
-    return set({ loading: false });
+    try {
+      await ky.post(`${api}/answer/submit`, {
+        json: data,
+      });
+    } catch (err) {
+      throw err;
+    } finally {
+      setTimeout(() => set({ loading: false }), 1000);
+    }
   },
   updateCompleted: (index, answerType, text) => {
     const state = get();
@@ -210,6 +216,7 @@ export const useQuestion = create<Store>()((set, get) => ({
   setPage: (page) => set({ page }),
   setDate: (date: string) => set({ date }),
   setSatisfied: (satisfied) => set({ satisfied }),
+  setSuccess: (success) => set({ success }),
   clear: () => {
     set({
       loading: false,

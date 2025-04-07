@@ -2,13 +2,12 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import IndexPage from "@/pages/index/index";
 import SurveyPage from "@/pages/survey";
+import { useQuestion } from "@/store/question.store";
 
 function GuardRouter({ children }: { children: JSX.Element }) {
-  return localStorage.getItem("isAgreement") === "true" ? (
-    children
-  ) : (
-    <Navigate to={"/"} />
-  );
+  const que = useQuestion();
+
+  return que.success ? children : <Navigate to={"/"} />;
 }
 
 function App() {

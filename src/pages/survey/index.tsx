@@ -12,6 +12,7 @@ import {
   Spinner,
 } from "@nextui-org/react";
 import { useNavigate } from "react-router-dom";
+import { addToast } from "@heroui/toast";
 
 import DefaultLayout from "@/layouts/default";
 import { Question, useQuestion } from "@/store/question.store";
@@ -60,7 +61,7 @@ function TitleQuestion() {
   };
 
   return (
-    <Card className="rounded-md bg-bismark-100 fade-in w-[100%] min-h-[100%] max-w-[800px]">
+    <Card className="rounded-md bg-bismark-100 fade-in w-[100%] max-w-[800px]">
       <CardBody>
         <div className="my-4">
           Укажите, пожалуйста, в каком году была проведена операция по замене
@@ -151,10 +152,21 @@ function SubmitForm() {
   const navigate = useNavigate();
 
   const onSubmit = () => {
-    que.submit().then(() => {
-      que.clear();
-      navigate("/");
-    });
+    que
+      .submit()
+      .then(() => {
+        que.clear();
+        navigate("/");
+      })
+      .catch((err) => {
+        addToast({
+          title: "Ошибка",
+          description: `${err}`,
+          color: "danger",
+          shadow: "lg",
+          timeout: 1500,
+        });
+      });
   };
 
   return (
@@ -165,7 +177,7 @@ function SubmitForm() {
       <CardBody className="flex flex-row justify-center">
         <Button
           className="bg-bismark-300 max-w-max"
-          // isLoading={que.loading}
+          isLoading={que.loading}
           onPress={onSubmit}
         >
           Отправить
@@ -204,7 +216,7 @@ function QuestionForm({ question }: { question: Question }) {
             </Radio>
           ))}
         </RadioGroup>
-        <Divider orientation="vertical" />
+        <Divider className="mx-2" orientation="vertical" />
         <RadioGroup
           label="После"
           onChange={(ev) => onSelect(ev.target.value, "after_six_months")}
@@ -224,7 +236,7 @@ function NextQuestion({ question }: { question: Question }) {
   const que = useQuestion();
 
   return (
-    <Card className="rounded-md bg-bismark-100 fade-in w-[100%] min-h-[100%] max-w-[800px]">
+    <Card className="rounded-md bg-bismark-100 fade-in w-[100%] max-w-[800px]">
       <CardHeader className="font-bold">Вопрос: {que.page}</CardHeader>
       <CardBody>
         <QuestionForm question={question} />
