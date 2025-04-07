@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Button,
   Card,
@@ -13,22 +13,8 @@ import {
 } from "@nextui-org/react";
 import { useNavigate } from "react-router-dom";
 
-import { questionsData } from "./assets/questions";
-
 import DefaultLayout from "@/layouts/default";
-
-type SatateType = React.Dispatch<React.SetStateAction<number>>;
-
-export interface Variant {
-  text: string;
-}
-
-export interface Question {
-  id: number;
-  text: string;
-  before: Variant[];
-  after: Variant[];
-}
+import { Question, useQuestion } from "@/store/question.store";
 
 export interface Answer {
   questionId: number;
@@ -36,16 +22,12 @@ export interface Answer {
   before: null | string;
 }
 
-function TitleQuestion({
-  page,
-  setPage,
-}: {
-  page: number;
-  setPage: SatateType;
-}) {
-  const navigate = useNavigate();
+function TitleQuestion() {
   const [value, setValue] = useState<string>("");
   const [isInvalid, setIsInvalid] = useState<boolean>(true);
+
+  const navigate = useNavigate();
+  const que = useQuestion();
 
   const onChange = (text: string) => {
     const dates = text.split(",");
@@ -79,7 +61,6 @@ function TitleQuestion({
 
   return (
     <Card className="rounded-md bg-bismark-100 fade-in w-[100%] min-h-[100%] max-w-[800px]">
-      <CardHeader>Вопрос: {page}</CardHeader>
       <CardBody>
         <div className="my-4">
           Укажите, пожалуйста, в каком году была проведена операция по замене
@@ -108,84 +89,126 @@ function TitleQuestion({
         </div>
       </CardBody>
       <CardFooter className="flex flex-row justify-between">
+        <Button className="bg-red-200" onPress={() => navigate("/")}>
+          Назад
+        </Button>
         <Button
           className="bg-bismark-300"
           isDisabled={!Boolean(value) || isInvalid}
-          variant="flat"
-          onPress={() => setPage(page + 1)}
+          onPress={() => que.setPage(que.page + 1)}
         >
           Далее
-        </Button>
-        <Button
-          className="bg-red-200"
-          variant="flat"
-          onPress={() => navigate("/")}
-        >
-          Назад
         </Button>
       </CardFooter>
     </Card>
   );
 }
 
-function QuestionForm({
-  question,
-  onAnswer,
-}: {
-  question: Question;
-  onAnswer: (answer: Answer) => void;
-}) {
-  const [answer, setAnswer] = useState<Answer>({
-    questionId: question.id,
-    after: null,
-    before: null,
-  });
+function EndQuestion() {
+  const que = useQuestion();
 
-  const onSelect = (text: string, answerType: "before" | "after") => {
-    answer[answerType] = text;
+  return (
+    <Card className="rounded-md bg-bismark-100 fade-in w-[100%] max-w-[800px]">
+      <CardHeader className="font-semibold justify-center">
+        <span>Удовлетворены ли Вы в целом результатами операции?</span>
+      </CardHeader>
+      <CardBody className="flex flex-row justify-center">
+        <RadioGroup
+          classNames={{ wrapper: "flex flex-row" }}
+          // @ts-ignore
+          onValueChange={(value) => que.setSatisfied(value)}
+        >
+          {["Да", "Частично", "Нет"].map((el) => (
+            <Radio key={Math.random()} value={el}>
+              {el}
+            </Radio>
+          ))}
+        </RadioGroup>
+      </CardBody>
+      <CardFooter className="flex flex-row justify-between">
+        <Button
+          className="bg-red-200"
+          onPress={() => que.setPage(que.page - 1)}
+        >
+          Назад
+        </Button>
+        <Button
+          className="bg-bismark-300"
+          onPress={() => que.setPage(que.page + 1)}
+        >
+          Далее
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
 
-    const answers: Answer[] = JSON.parse(
-      localStorage.getItem("answers") || "[]"
-    );
+function SubmitForm() {
+  const que = useQuestion();
+  const navigate = useNavigate();
 
-    const index = answers.findIndex(
-      (el) => el.questionId === answer.questionId
-    );
+  const onSubmit = () => {
+    que.submit().then(() => {
+      que.clear();
+      navigate("/");
+    });
+  };
 
-    if (index === -1) {
-      answers.push(answer);
-    } else {
-      answers[index] = answer;
-    }
+  return (
+    <Card className="rounded-md bg-bismark-100 fade-in w-[100%] max-w-[800px]">
+      <CardHeader className="font-semibold justify-center">
+        <span>Благодарим Вас за помощь в исследовании!</span>
+      </CardHeader>
+      <CardBody className="flex flex-row justify-center">
+        <Button
+          className="bg-bismark-300 max-w-max"
+          isLoading={que.loading}
+          onPress={onSubmit}
+        >
+          Отправить
+        </Button>
+      </CardBody>
+    </Card>
+  );
+}
 
-    localStorage.setItem("answers", JSON.stringify(answers));
+function QuestionForm({ question }: { question: Question }) {
+  const que = useQuestion();
 
-    setAnswer(answer);
-    onAnswer(answer);
+  const onSelect = (
+    text: string,
+    // eslint-disable-next-line prettier/prettier
+    answerType: "before_surgery" | "after_six_months"
+  ) => {
+    const index = que.completed.findIndex((el) => el.id === question.id);
+
+    if (index === -1) return;
+
+    que.updateCompleted(index, answerType, text);
   };
 
   return (
     <Card className="bg-transparent shadow-none">
-      <CardHeader className="font-semibold">{question.text}</CardHeader>
+      <CardHeader className="font-semibold">{question.question}</CardHeader>
       <CardBody className="flex flex-row justify-around">
         <RadioGroup
           label="До"
-          onChange={(ev) => onSelect(ev.target.value, "before")}
+          onChange={(ev) => onSelect(ev.target.value, "before_surgery")}
         >
-          {question.after.map((el) => (
-            <Radio key={Math.random()} value={el.text}>
-              {el.text}
+          {question.answers.before_surgery.map((el) => (
+            <Radio key={Math.random()} value={el}>
+              {el}
             </Radio>
           ))}
         </RadioGroup>
         <Divider orientation="vertical" />
         <RadioGroup
           label="После"
-          onChange={(ev) => onSelect(ev.target.value, "after")}
+          onChange={(ev) => onSelect(ev.target.value, "after_six_months")}
         >
-          {question.before.map((el) => (
-            <Radio key={Math.random()} value={el.text}>
-              {el.text}
+          {question.answers.after_six_months.map((el) => (
+            <Radio key={Math.random()} value={el}>
+              {el}
             </Radio>
           ))}
         </RadioGroup>
@@ -194,44 +217,27 @@ function QuestionForm({
   );
 }
 
-function NextQuestion({
-  page,
-  setPage,
-  question,
-}: {
-  page: number;
-  setPage: SatateType;
-  question: Question;
-}) {
-  const [isValid, setIsValid] = useState<boolean>(false);
-
-  const onAnswer = (answer: Answer) => {
-    // eslint-disable-next-line no-console
-    console.log(answer);
-    setIsValid(!!answer.after && !!answer.before);
-  };
+function NextQuestion({ question }: { question: Question }) {
+  const que = useQuestion();
 
   return (
     <Card className="rounded-md bg-bismark-100 fade-in w-[100%] min-h-[100%] max-w-[800px]">
-      <CardHeader className="font-bold">Вопрос: {page}</CardHeader>
+      <CardHeader className="font-bold">Вопрос: {que.page}</CardHeader>
       <CardBody>
-        <QuestionForm question={question} onAnswer={onAnswer} />
+        <QuestionForm question={question} />
       </CardBody>
       <CardFooter className="flex flex-row justify-between">
         <Button
-          className="bg-bismark-300"
-          isDisabled={!isValid}
-          variant="flat"
-          onPress={() => setPage(page + 1)}
-        >
-          Далее
-        </Button>
-        <Button
           className="bg-red-200"
-          variant="flat"
-          onPress={() => setPage(page - 1)}
+          onPress={() => que.setPage(que.page - 1)}
         >
           Назад
+        </Button>
+        <Button
+          className="bg-bismark-300"
+          onPress={() => que.setPage(que.page + 1)}
+        >
+          Далее
         </Button>
       </CardFooter>
     </Card>
@@ -239,62 +245,40 @@ function NextQuestion({
 }
 
 export default function SurveyPage() {
-  const [page, setPage] = useState<number>(
-    Number(+(localStorage.getItem("page") || 1))
-  );
-  const [questions] = useState<Question[]>(questionsData);
-  const [question, setQuestion] = useState<Question>();
+  const que = useQuestion();
 
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    setQuestion(questions[page - 1]);
-    localStorage.setItem("page", `${page}`);
-  }, [page]);
-
-  const onSend = () => {
-    const answers = JSON.parse(localStorage.getItem("answers") || "[]");
-
-    // eslint-disable-next-line no-console
-    console.log(answers);
-
-    localStorage.removeItem("isAgreement");
-    localStorage.removeItem("page");
-    localStorage.removeItem("answers");
-
-    navigate("/");
-  };
-
-  if (page === 1)
+  if (que.page === -1)
     return (
       <DefaultLayout>
         <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 h-[100%]">
-          <TitleQuestion page={page} setPage={setPage} />
+          <TitleQuestion />
         </section>
       </DefaultLayout>
     );
 
-  if (page > 1 && question && page !== questions.length)
+  if (que.page > -1 && que.page < que.pages)
     return (
       <DefaultLayout>
         <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 h-[100%]">
-          <NextQuestion
-            key={page}
-            page={page}
-            question={question!}
-            setPage={setPage}
-          />
+          <NextQuestion key={que.page} question={que.questions[que.page]} />
         </section>
       </DefaultLayout>
     );
 
-  if (page === questions.length)
+  if (que.page === que.pages)
     return (
       <DefaultLayout>
         <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 h-[100%]">
-          <Button className="bg-bismark-300" variant="flat" onPress={onSend}>
-            Отправить
-          </Button>
+          <EndQuestion />
+        </section>
+      </DefaultLayout>
+    );
+
+  if (que.satisfied)
+    return (
+      <DefaultLayout>
+        <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 h-[100%]">
+          <SubmitForm />
         </section>
       </DefaultLayout>
     );

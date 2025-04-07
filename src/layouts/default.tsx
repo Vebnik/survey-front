@@ -1,4 +1,5 @@
 import { CustomFooter } from "@/shared/ui/footer";
+import { LoginModal } from "@/shared/ui/login-modal";
 import { CustomNavbar } from "@/shared/ui/navbar";
 
 export default function DefaultLayout({
@@ -13,6 +14,7 @@ export default function DefaultLayout({
         {children}
       </main>
       <CustomFooter />
+      <LoginModal />
     </div>
   );
 }
