@@ -248,7 +248,7 @@ export const useQuestion = create<Store>()((set, get) => ({
     const api = import.meta.env.VITE_API_URL || "http://localhost:4042";
 
     try {
-      const response = await ky.post<string>(`${api}/statistic`, {
+      const response = await ky.post<string>(`${api}/answer/statistic`, {
         json: { date },
       });
 

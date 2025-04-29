@@ -21,9 +21,14 @@ export default function StatisticPage() {
   const onStatistic = () => {
     if (!date) return;
 
+    const from = date?.start.toString().replace(/-/gmi, '.').split('.')
+    const to = date?.end.toString().replace(/-/gmi, '.').split('.')
+
+    console.log({ from })
+
     const clearDate = {
-      from: date?.start.toString(),
-      to: date?.end.toString(),
+      from: `${from[2]}.${from[1]}.${from[0]}`,
+      to: `${to[2]}.${to[1]}.${to[0]}`,
     };
 
     que.getStatistic(clearDate);

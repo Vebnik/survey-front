@@ -46,6 +46,9 @@ export function CustomNavbar() {
               <DropdownItem key="stats" as={Link} href="/statistic">
                 Статистика
               </DropdownItem>
+              <DropdownItem key="genearl" as={Link} href="/">
+                Главная
+              </DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </NavbarItem>
