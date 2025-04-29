@@ -52,7 +52,7 @@ export function LoginModal() {
               <Button color="danger" variant="light" onPress={onClose}>
                 Отмена
               </Button>
-              <Button className="bg-bismark-300" onPress={onLogin}>
+              <Button className="bg-bismark-300" onPress={onLogin} disabled>
                 Войти
               </Button>
             </ModalFooter>

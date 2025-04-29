@@ -46,6 +46,8 @@ type Store = {
   setSuccess: (success: boolean) => void;
   setSatisfied: (satisfied: "Да" | "Частично" | "Нет") => void;
   clear: () => void;
+
+  getStatistic: (date: { from: string; to: string }) => void;
 };
 
 export const questionsData: Question[] = [
@@ -57,15 +59,13 @@ export const questionsData: Question[] = [
         "Свободно передвигался",
         "Передвигался с тростью или костылями",
         "Не способен сам передвигаться",
-        "Удовлетворительно",
-        "Плохо",
+        "Затрудняюсь ответить",
       ],
       after_six_months: [
         "Свободно передвигаюсь",
         "Передвигаюсь с тростью или костылями",
         "Не способен сам передвигаться",
-        "Удовлетворительно",
-        "Плохо",
+        "Затрудняюсь ответить",
       ],
     },
   },
@@ -79,8 +79,7 @@ export const questionsData: Question[] = [
         "Мог все делать самостоятельно",
         "Нуждался в помощи",
         "Прикован к постели",
-        "Удовлетворительно",
-        "Плохо",
+        "Затрудняюсь ответить",
       ],
       after_six_months: [
         "Передвигаюсь с тростью или костылями",
@@ -88,8 +87,7 @@ export const questionsData: Question[] = [
         "Могу все делать самостоятельно",
         "Нуждаюсь в помощи",
         "Прикован к постели",
-        "Удовлетворительно",
-        "Плохо",
+        "Затрудняюсь ответить",
       ],
     },
   },
@@ -105,8 +103,7 @@ export const questionsData: Question[] = [
         "Не работал",
         "Имел инвалидность",
         "Пенсионер по старости",
-        "Удовлетворительно",
-        "Плохо",
+        "Затрудняюсь ответить",
       ],
       after_six_months: [
         "Нуждаюсь в помощи",
@@ -116,8 +113,7 @@ export const questionsData: Question[] = [
         "Не работаю",
         "Имею инвалидность",
         "Пенсионер по старости",
-        "Удовлетворительно",
-        "Плохо",
+        "Затрудняюсь ответить",
       ],
     },
   },
@@ -126,16 +122,16 @@ export const questionsData: Question[] = [
     question: "Самооценка состояния здоровья",
     answers: {
       before_surgery: [
-        "Сменил работу на более легкую",
-        "Не работал",
-        "Имел инвалидность",
-        "Пенсионер по старости",
+        "Хорошо",
+        "Удовлетворительно",
+        "Плохо",
+        "Затрудняюсь ответить",
       ],
       after_six_months: [
-        "Сменил работу на более легкую",
-        "Не работаю",
-        "Имею инвалидность",
-        "Пенсионер по старости",
+        "Хорошо",
+        "Удовлетворительно",
+        "Плохо",
+        "Затрудняюсь ответить",
       ],
     },
   },
@@ -143,8 +139,18 @@ export const questionsData: Question[] = [
     id: 5,
     question: "Самооценка эмоционального состояния",
     answers: {
-      before_surgery: ["Хорошо", "Удовлетворительно", "Плохо"],
-      after_six_months: ["Хорошо", "Удовлетворительно", "Плохо"],
+      before_surgery: [
+        "Хорошо",
+        "Удовлетворительно",
+        "Плохо",
+        "Затрудняюсь ответить",
+      ],
+      after_six_months: [
+        "Хорошо",
+        "Удовлетворительно",
+        "Плохо",
+        "Затрудняюсь ответить",
+      ],
     },
   },
   {
@@ -234,5 +240,34 @@ export const useQuestion = create<Store>()((set, get) => ({
         },
       })),
     });
+  },
+
+  getStatistic: async (date: { from: string; to: string }) => {
+    set({ loading: true })
+
+    const api = import.meta.env.VITE_API_URL || "http://localhost:4042";
+
+    try {
+      const response = await ky.post<string>(`${api}/statistic`, {
+        json: { date },
+      });
+
+      const text = await response.text()
+
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+
+      a.href = url;
+      a.download = `${date.from}_${date.to}.txt`;
+
+      a.click()
+
+    } catch (err) {
+      alert(`------ Ошибка ------\n${err}\n----------------------`)
+      throw err;
+    } finally {
+      setTimeout(() => set({ loading: false }), 1000);
+    }
   },
 }));

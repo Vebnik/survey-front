@@ -39,6 +39,7 @@ export function CustomNavbar() {
               <DropdownItem
                 key="login"
                 onPress={() => modals.setIsOpen("login", true)}
+                isDisabled
               >
                 Войти
               </DropdownItem>

@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import IndexPage from "@/pages/index/index";
 import SurveyPage from "@/pages/survey";
+import StatisticPage from "@/pages/statistic";
 import { useQuestion } from "@/store/question.store";
 
 function GuardRouter({ children }: { children: JSX.Element }) {
@@ -21,6 +22,10 @@ function App() {
           </GuardRouter>
         }
         path="/survey"
+      />
+      <Route
+        element={<StatisticPage />}
+        path="/statistic"
       />
     </Routes>
   );
